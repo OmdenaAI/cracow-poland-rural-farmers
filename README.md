@@ -3,7 +3,7 @@
 
 # Improving Digital Advisory Services for Rural Farmers using Predictive Analytics and Satellite Imagery
 
-#The problem
+# The problem
 
 We have seen traction in demand for rural digital advisory services, however current systems for digital advisory are focused on the broad delivery of extension services based on a large number of farmers. AI can revolutionize extension services through the provision of individualized advisory based on several data elements (on-farm data, satellite imagery, remote sensing, and GIS) thereby increasing the value for extension services to the individual farmer. Although use cases are being built in other development agencies and countries, we have not seen greater traction on AI and other technologies integration in IFAD-supported projects. This could be an opportunity to develop a Proof-of-Concept (POC) and develop a potential use case for scale.
 
