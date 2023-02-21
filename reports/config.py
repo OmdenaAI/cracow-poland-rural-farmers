@@ -7,7 +7,7 @@
 
 config = {
         ### Data prep parameters
-          'prep_file_dir': '/Users/aaronl/Documents/GitHub/cracow-poland-rural-farmers/reports/outputs', 
+          'prep_file_dir': '/Users/aaronl/Documents/GitHub/cracow-poland-rural-farmers/reports/outputs',
           'prep_tile_id': 'TPT',
           'prep_base_chunk': 'auto',
           'prep_time_chunk': 'auto',
@@ -27,10 +27,8 @@ config = {
           'preproc_out_dir': 'preproc_out_dir/',
           'preproc_outfile_prefix':'fields_preproc_demo_',
           'preproc_sample_pct':0.05,
-          'preproc_n_clusters':15,
           'preproc_cluster_tile':True,
         ### Kmeans Clustering mask processing parameters
-          'kmeans_n_clusters': 15,
           'kmeans_model_out_dir': 'kmeans_model_dir/',
           'kmeans_8var_clusters':True,
           'kmeans_std_thresh':0.2,

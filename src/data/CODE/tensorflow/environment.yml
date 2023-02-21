@@ -1,0 +1,12 @@
+name: tensorflow-metal
+channels:
+  - apple
+  - conda-forge
+dependencies:
+  - nomkl
+  - tensorflow==2.9.1
+  - tensorflow-deps==2.9
+  - pip
+  - pip:
+    - tensorflow-macos
+    - tensorflow-metal
