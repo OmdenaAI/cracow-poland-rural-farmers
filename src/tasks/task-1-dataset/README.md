@@ -16,7 +16,7 @@ Instead, you can manually create the environment with the following commands:
   3. Install all the necessary packages at once so that conda handles the dependencies:
   ```conda install -c conda-forge python=3.8.3 gdal=3.0.4 geopandas=0.7.0 rasterio=1.1.5 dask=2.19.0 xarray=0.15.1 matplotlib=3.2.1 seaborn=0.10.1 scikit-learn=0.23.1 scikit-image=0.17.2 ipython=7.15.0 ipykernel=5.3.0 folium=0.11.0 bokeh=2.1.1 holoviews=1.13.3 datashader=0.11.0 psycopg2=2.8.5 sqlalchemy=1.3.17 geoalchemy2=0.6.3 descartes=1.1.0 contextily=1.0.0 memory_profiler=0.57.0 autopep8=1.5.3 netcdf4=1.5.3```
 
-# Solange's noote for the demo
+# Solange's note for the demo
 
 Change in the global_config file the following parameters for the demo:
 'prep_file_dir': where you want the data to be downloaded from the Copernicus API
