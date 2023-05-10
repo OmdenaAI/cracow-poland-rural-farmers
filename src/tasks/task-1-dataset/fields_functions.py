@@ -66,12 +66,26 @@ import pandas as pd
 import os
 import os.path
 from os import path
-from shapely.geometry import shape, mapping, Point
+from shapely.geometry import shape, mapping, Point, Polygon
 
 #%%
-
+import json
 # import config module with global config parameters
-from global_config import *
+try:
+  # import config module with global config parameters
+  from global_config import *
+  print("Original global_config.py loaded.")
+except NameError:
+    print("Previously modified global_config.py loaded.")
+    data = []
+    #TODO need to avoid hard coded path
+    with open('/content/drive/MyDrive/omdena-poland/task-1-dataset/global_config.py') as f:
+        for line in f:
+            data.append(json.loads(line))
+    config = data[0]
+
+    
+    
 
 #%%
 """
@@ -240,7 +254,25 @@ def xr_get_zip_info_to_dict(zip_file):
     
     return info_dict
 
+def temporary_shapefile(x00,y00,xlast,ylast,prefix_file):
+        # save coordinates in a shapefile for future use
+        lon_lat_list = [[x00, ylast], [x00, y00], [xlast, y00], [xlast, ylast],[x00, ylast]]
+        polygon_geom = Polygon(lon_lat_list)
+        polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32633', geometry=[polygon_geom])
+        shapefile_path = config["prep_file_dir"]
+        polygon.to_file(shapefile_path+'/'+prefix_file+'_32633_shapefile.shp')
+        polygon = polygon.to_crs(epsg=4326)
+        polygon.to_file(shapefile_path+'/'+prefix_file+'_4326_shapefile.shp')
+        return polygon
 
+def matrix_corner_coordinates(rio_da):
+        # x,y-origin of the matrix top-left corner of the 2D epsg:32633 coordinates matrix
+        x00 = rio_da.x.values[0]
+        y00 = rio_da.y.values[0]
+        # x, y of the matrix bottom-right corner of the 2D epsg:32633 coordinates matrix
+        xlast = rio_da.x.values[-1]
+        ylast = rio_da.y.values[-1]
+        return x00,y00,xlast,ylast
 
 ### Pass tile information (gdal_str) to open file to xr.dataset and place object in ds_list
 ### With remove_overlap set to True, the function selects by x,y extent to remove right and bottom overlap with neighboring tiles
@@ -249,7 +281,7 @@ def xr_get_zip_info_to_dict(zip_file):
 def xr_dict_to_dataset_cloud_mask(da_name, gdal_str, date_obj, tile_id, cld_mask_str,
                                   load_cloud_mask = False, apply_cloud_mask = False, cloud_mask_thresh = 30,
                                   chunks=(-1,1000,1000), remove_overlap = True,
-                                  manual_subset = False, x_start = 0, y_start = 0, step = 1000):
+                                  manual_subset = False, x_start = 0, y_start = 0, step = 1000, coor_system = 'pixel'):
     """
     Pass tile information (gdal_str) to open file to xr.dataset and place object in ds_list
     With remove_overlap set to True, the function selects by x,y extent to remove right and bottom overlap with neighboring tiles
@@ -304,14 +336,80 @@ def xr_dict_to_dataset_cloud_mask(da_name, gdal_str, date_obj, tile_id, cld_mask
             cld_mask_da = cld_mask_da[:,:-490+(prep_offset/2),:-490+(prep_offset/2)]
 
     if manual_subset:
+        # NEW start
+        original_shape_rio_da = rio_da.shape # shape of the tile 3D matrix
+
+        #extract matrix x,y-coordinates of the matrix top-left and bottom-right corner of the 2D epsg:32633
+        x00,y00,xlast,ylast = matrix_corner_coordinates(rio_da)
+
+        # save coordinates in a shapefile
+        temporary_shapefile(x00,y00,xlast,ylast,'tile')
+        
+        # check if the coordinates are epsg:32633 coordinates or pixels coordinates
+        # pixels coodinated needs to be inside the 2D coordinates matrix from the tile
+        # epsg:32633 coordinates will be much bigger
+        # TODO: improve the criteria for coordinates type.
+        if coor_system=="aoi":
+          print("Manual subset: Shapefile coordinates detected.")
+          # Need to compute the x_start and y_start as pixels coordinates
+          # according to the statellite tile referencial
+          # and not in epsg:32633 coordinates referencial
+
+          # Need to convert from epsg:32633 to pixels coordinates
+          # compute the distance in epsg:32633 on the x-axis between the tile origin coordinates
+          # and the top-left corner of the polygon of interest
+          # Note: ceil can be used too, the difference is smaller than the satelittle image resolution
+          # WARNING: the polygon coodinate is a float and the tile is an integer
+          floor_diff_x = np.floor(abs(x_start - x00))
+          # same for y axis
+          floor_diff_y = np.floor(abs(y_start - y00))
+          # Compute the new coordinate in the tile referencial
+          # for the the top-left corner of the polygon
+          # overwrite the x_start for the tile referencial
+          # TODO: the resolution of 10m per pixel is hard coded: dangerous!       
+          x_start = int(floor_diff_x // 10) # x start in pixel
+          y_start = int(floor_diff_y // 10) # y start in pixel
+        elif coor_system=="point":
+          print("Manual subset: Point coordinates detected.")
+          # Need to compute the x_start and y_start as pixels coordinates
+          # according to the statellite tile referencial
+          # and not in epsg:32633 coordinates referencial
+
+          # Need to convert from epsg:32633 to pixels coordinates
+          # compute the distance in epsg:32633 on the x-axis between the tile origin coordinates
+          # and the top-left corner of the polygon of interest
+          # Note: ceil can be used too, the difference is smaller than the satelittle image resolution
+          # WARNING: the polygon coodinate is a float and the tile is an integer
+          floor_diff_x = np.floor(abs(x_start - x00))
+          # same for y axis
+          floor_diff_y = np.floor(abs(y_start - y00))
+          # Compute the new coordinate in the tile referencial
+          # for the the top-left corner of the polygon
+          # overwrite the x_start for the tile referencial
+          # TODO: the resolution of 10m per pixel is hard coded: dangerous!       
+          x_start = int(floor_diff_x // 10) # x start in pixel
+          y_start = int(floor_diff_y // 10) # y start in pixel
+        else:
+          print("Manual subset: Pixel coordinates detected (default).")
+        # NEW end
+        
         # Just for processing in manual batches
-        x = x_start
-        y = y_start       
-        x_end = x + step + prep_offset
-        y_end = y + step + prep_offset 
-        rio_da = rio_da[:, x:x_end, y:y_end]
+        if coor_system!="point":
+            x = x_start
+            y = y_start       
+            x_end = x + step + prep_offset
+            y_end = y + step + prep_offset
+        else:
+            x = x_start - step//2
+            y = y_start - step//2
+            x_end = x_start + step//2 + prep_offset
+            y_end = y_start + step//2 + prep_offset
+
+        # save coordinates in a shapefile
+        temporary_shapefile(rio_da.x.values[x],rio_da.y.values[y],rio_da.x.values[x_end],rio_da.y.values[y_end],'subset')
+        rio_da = rio_da[:, y:y_end, x:x_end] 
         if load_cloud_mask:
-            cld_mask_da = cld_mask_da[:,int(x/2):int(x_end/2), int(y/2):int(y_end/2)]      
+            cld_mask_da = cld_mask_da[:, int(y/2):int(y_end/2), int(x/2):int(x_end/2)]  
 
     if load_cloud_mask:
         # Resample cloud mask to 10m resolution to work with imagery bands
@@ -326,7 +424,7 @@ def xr_dict_to_dataset_cloud_mask(da_name, gdal_str, date_obj, tile_id, cld_mask
                          2:'green',
                          3:'blue',
                          4:'nir'})
-    
+        
     # Apply cloud mask to bands
     if apply_cloud_mask:
         ds['red'] = ds['red'].where(cld_mask_da)
@@ -338,10 +436,16 @@ def xr_dict_to_dataset_cloud_mask(da_name, gdal_str, date_obj, tile_id, cld_mask
         ds = ds[dict(x=slice(0,10000), y=slice(0,10000))].chunk(chunks={'x':'auto','y':'auto'})
     
     if manual_subset:
-        x = x_start
-        y = y_start       
-        x_end = x + step
-        y_end = y + step
+        if coor_system!="point":
+            x = x_start
+            y = y_start       
+            x_end = x + step
+            y_end = y + step
+        else:
+            x = x_start - step//2
+            y = y_start - step//2
+            x_end = x_start + step//2
+            y_end = y_start + step//2           
         ds = ds[dict(x=slice(0,step), y=slice(0,step))].chunk(chunks={'x':'auto','y':'auto'})
     
     return ds
@@ -371,6 +475,7 @@ def prep_data():
     clip_outliers = config['prep_clip_outliers']
     percentile = config['prep_clip_percentile']
     normalize = config['prep_normalize_bands']
+    coor_system = config['prep_coordinates_x_y_system']
     
     # set working directory to the folder with the sentinel data tiles
     # Set file_dir in the global variables at top of the code
@@ -398,7 +503,7 @@ def prep_data():
                 ds_time_stack = xr_dict_to_dataset_cloud_mask(k,v['gdal_str'],v['date_obj'],v['tile_id'], v['cloud_mask_str'], 
                                                               load_cloud_mask = load_cloud_mask, apply_cloud_mask = apply_cloud_mask, cloud_mask_thresh = cloud_mask_thresh,
                                                               chunks=chunk_size, remove_overlap=overlap_bool,
-                                                              manual_subset = manual_subset, x_start = x_start, y_start = y_start, step = step)
+                                                              manual_subset = manual_subset, x_start = x_start, y_start = y_start, step = step, coor_system = coor_system)
                                 
                 date_list.append(v['date_obj'])
                 
@@ -413,7 +518,7 @@ def prep_data():
                                            xr_dict_to_dataset_cloud_mask(k,v['gdal_str'],v['date_obj'],v['tile_id'], v['cloud_mask_str'],
                                                                          load_cloud_mask = load_cloud_mask, apply_cloud_mask = apply_cloud_mask, cloud_mask_thresh = cloud_mask_thresh,
                                                                          chunks=chunk_size, remove_overlap=overlap_bool,
-                                                                         manual_subset = manual_subset, x_start = x_start, y_start = y_start, step = step)], 
+                                                                         manual_subset = manual_subset, x_start = x_start, y_start = y_start, step = step,coor_system = coor_system)], 
                                                                          dim = 'time')
                 date_list.append(v['date_obj'])
             # Add to the count so that subsequent tiles are concatenated with ds_time_stack instead of overwriting it
@@ -1885,7 +1990,7 @@ Write to shapefile
 -------------------------------------
 """
 
-def write_shapefile(segmented_array, ds_time_stack, mask_input):
+def write_shapefile(segmented_array, ds_time_stack, mask_input,point_id):
     '''
     This function takes an array (meant for a raster that has already been segmented)
     and writes the polygonized raster to a shapefile.
@@ -1920,7 +2025,7 @@ def write_shapefile(segmented_array, ds_time_stack, mask_input):
                             ds_time_stack.coords['y'].values[0]+5)
         transform  = transform_update
         # Update outfile name to reflect spatial subset
-        out_file_name = tile_id + file_out_str + "_x" + str(x_start) + "_y" + str(y_start) + "_step" + str(config['prep_step']) + ".shp"
+        out_file_name = tile_id + file_out_str + "_x" + str(x_start) + "_y" + str(y_start) + "_step" + str(config['prep_step']) + "_pointid"+str(point_id)+".shp"
         output_str = out_dir + out_file_name
     
     # CRS from main data stack attributes
@@ -1953,6 +2058,7 @@ def write_shapefile(segmented_array, ds_time_stack, mask_input):
             layer.write(geom)
     
     print("Output saved to:", output_str)
+    return out_file_name
 
 
 """
