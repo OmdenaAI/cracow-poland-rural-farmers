@@ -14,7 +14,7 @@ Instead, you can manually create the environment with the following commands:
   2. Activate the new environment:
   `conda activate geoenv`
   3. Install all the necessary packages at once so that conda handles the dependencies:
-  `!pip install requirements.txt
+  `!pip install requirements.txt`
 
 # Solange's note for the demo
 
