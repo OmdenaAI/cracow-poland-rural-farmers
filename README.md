@@ -6,11 +6,12 @@
 # The problem
 
 We have seen traction in demand for rural digital advisory services, however current systems for digital advisory are focused on the broad delivery of extension services based on a large number of farmers. AI can revolutionize extension services through the provision of individualized advisory based on several data elements (on-farm data, satellite imagery, remote sensing, and GIS) thereby increasing the value for extension services to the individual farmer. Although use cases are being built in other development agencies and countries, we have not seen greater traction on AI and other technologies integration in IFAD-supported projects. This could be an opportunity to develop a Proof-of-Concept (POC) and develop a potential use case for scale.
+<img width="710" alt="Screenshot 2023-05-04 at 1 13 52 PM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/945325aa-b714-4171-9573-28e94758c34d">
 
 # We had no data!!!!
 
 #How we created a GIS dataset with no data
-<img width="710" alt="Screenshot 2023-05-04 at 1 13 52 PM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/5f4deace-e99a-4735-9a8c-ce1f4ed6016c">
+
 
 Omdena Poland Chapter
 
@@ -20,6 +21,7 @@ Satellite imagery has become a valuable tool for monitoring crop health and iden
 Contrary to most GIS datasets, which provide raster at a regional or large area level, when it comes to identifying land usage, we understand that the details matter. That's why we work at the field level when it comes to identifying crop types. We recognize that each field is unique, and the crops grown on it can vary based on factors like soil quality, sun exposure, and moisture levels. By delimiting each field and labeling which type of crops are on it, we can monitor how it evolves over time and provide farmers with accurate and detailed information that they can use to make informed decisions about crop management. This micro-level approach allows us to create a customized solution for each field, ensuring that farmers get the most out of their crop data.
 
 #Process and Workflow
+<img width="1022" alt="Screenshot 2023-05-10 at 7 33 33 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/ec0d58a1-0d91-45cf-af85-616cad4fd9f3">
 
 We first began working on exploratory data analysis, deciphering which satellite system is usable for downloading images as there were several choices: Landsat and ESA (European Space Agency) Satellites. We discovered that the Sentinel-2 Satellite was optimal with its NIR (Near InfraRed) sensor and was most suitable for crop contiguous or delineation detection. Second, we began image retrieval. We borrowed heavily from a master’s thesis called EveryField, in which we were able to find some techniques for downloading images and looking at the bands. There were some problems with delineation of fields using EveryField's techniques. One of the team members saw a new release of Meta code for Pytorch called “Segment Anything”,” which we began adapting for use in field delineation. After getting the mask, logic checks are made to prevent overlapping and faulty polygons to get good separation between polygons and no overlapping.
 The purpose of field delineation is to train an LSTM (Long Short Term Memory) machine learning model to classify the crop type on a given polygon delimiting a crop field. 
@@ -36,18 +38,17 @@ The purpose of field delineation is to train an LSTM (Long Short Term Memory) ma
 So, this is the output of what we have been working on. It's just a DEMO with only one subset because we need a batch processing pipeline demonstration. This program would require terabytes of data to feed a model.
 In the illustration below, on the left, the RGB subset image is presented, and on the right, the corresponding segmentation using META’s Pytorch is shown. As you can see, we have designated fields in our LUCAS dataset represented by red dots to which we have assigned labels. The top left red dot represents an unknown cereal, the bottom left is common wheat, and the right one is sugar beets. Fields on the South side of Poland are fairly small, and the META’s Pytorch did a good job of segmenting the field on a 5km x 5km subset. However, as soon as the subset is larger (for example, 10km x 10km), the segmentation becomes sub-optimal for our purposes!
 
-<img width="1022" alt="Screenshot 2023-05-10 at 7 33 33 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/ca355ca4-d9af-4aba-9cb6-cf3af18bcc13">
+
+<img width="1403" alt="Screenshot 2023-05-10 at 6 59 29 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/e7585e21-92e1-4985-afff-d75f56f7761a">
 
 #The following illustration shows the standard deviation of the NDVI score averaged per month for the growing season:
 
 
-<img width="1403" alt="Screenshot 2023-05-10 at 6 59 29 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/cd28d3c1-eb61-4db7-a815-554e0eb820b5">
 
 
 #This is what is happening with the crop cycles when considering the average mean NDVI score:
+<img width="804" alt="Screenshot 2023-05-10 at 6 59 53 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/cc0740ff-1591-4849-b0d7-23e11c04cffb">
 
-
-<img width="804" alt="Screenshot 2023-05-10 at 6 59 53 AM" src="https://github.com/OmdenaAI/cracow-poland-rural-farmers/assets/9891291/9862e48e-6bc7-432b-a5d2-a99c80ce05e3">
 
 As you can see, Poland plants "Winter Wheat" having two harvest seasons a year (i.e. Summer Wheat in the spring cycle, winter wheat in the fall cycle). Whereas beets or other plants are once-a-year crops and have their harvest in late September or early October. Using these signatures in an LSTM (Long Short-Term Memory), we can create a signature analysis of various European crops and determine other factors.
 Unfortunately, we had limited access to resources. Being a volunteer project only, we would need a virtual machine that costs $150 a month and maybe 3TB of cloud storage, but we are not sure how much that would cost.
