@@ -1,0 +1,29 @@
+# This yaml file is generated using the "conda env export --from-history" flag with the purpose to make this file work across platforms.
+name: geoenv
+channels:
+  - conda-forge
+  - nodefaults # Exclude the default channels, equivalent to passing the --override-channels options
+dependencies:
+  - geoalchemy2=0.6.3
+  - gdal=3.0.4
+  - folium=0.11.0
+  - xarray=0.15.1
+  - bokeh=2.0.1
+  - ipython=7.15.0
+  - scikit-image=0.17.2
+  - matplotlib=3.2.1
+  - holoviews=1.13.2
+  - psycopg2=2.8.5
+  - scikit-learn=0.23.1
+  - datashader=0.10.0
+  - geopandas=0.7.0
+  - dask=2.18.0
+  - sqlalchemy=1.3.17
+  - ipykernel=5.3.0
+  - rasterio=1.1.5
+  - seaborn=0.10.1
+  - python=3.8.3
+  - contextily=1.0.0
+  - descartes=1.1.0
+  - netcdf4=1.5.3 # Support xarrary write the dataset to netcdf
+  - autopep8=1.5.3

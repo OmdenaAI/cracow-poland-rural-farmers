@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "CELLCODE": "10kmE520N315", "EOFORIGIN": 5200000, "NOFORIGIN": 3150000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 22.533568131029224, 50.781600452000475 ], [ 22.557659433440566, 50.869971689844128 ], [ 22.697924056247711, 50.854512261919645 ], [ 22.673577402431402, 50.766174705100418 ], [ 22.533568131029224, 50.781600452000475 ] ] ] } }
+]
+}
